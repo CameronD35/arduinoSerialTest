@@ -1,16 +1,40 @@
+from flask import Flask, redirect
+from models import db, connect_db, Temp
 import serial
 import time
 
+app = Flask(__name__)
+app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///arduino"
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ECHO'] = True
 
-ser = serial.Serial('/dev/cu.usbmodem1101', 9600, timeout=1)
+connect_db(app)
+with app.app_context():
+    db.create_all()
 
-print("Reading data from serial port...")
-time.sleep(2)
-ser.reset_input_buffer()
+@app.route("/")
+def home():
+    ser = serial.Serial('/dev/cu.usbmodem1101', 9600, timeout=1)
 
-for i in range (0, 7):
-    line = ser.readline()
-    print(line)
-    time.sleep(0.5)
+    print("Reading data from serial port...")
+    time.sleep(2)
+    ser.reset_input_buffer()
 
-print("Exit")
+    for i in range (0, 7):
+        line = ser.readline()
+        print(str(line))
+        time.sleep(0.5)
+
+        if line:
+            temp = Temp(temperature=line)
+
+            db.session.add(temp)
+            db.session.commit()
+    # temp = Temp("10")
+
+    # db.session.add(temp)
+    # db.session.commit()
+    print("Exit")
+
+    return redirect("/")
+
