@@ -7,7 +7,7 @@ class Temp(db.Model):
     __tablename__ = "temps"
 
     id = db.Column(db.Integer, primary_key=True)
-    temperature = db.Column(db.Text)
+    temperature = db.Column(db.String, nullable=False)
 
 def connect_db(app):
     db.app = app
